@@ -39,7 +39,7 @@ public class PlayerCtl : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         curPosBrick = Vector3.zero;
     }
-    private void OnInit()
+    public void OnInit()
     {
         ClearBrick();
         this.isMove = false;
@@ -49,7 +49,6 @@ public class PlayerCtl : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Debug.Log(stackBrick.Count);
         //check đường vuốt màn hình
         if (isCheckMoving)
         {
@@ -199,15 +198,19 @@ public class PlayerCtl : MonoBehaviour
                 this.isMove = false;
                 this.isCheckMoving = true;
                 rb.velocity = Vector3.zero;
-            }else if(hit.collider.CompareTag("WallFinish"))
+            }
+            else if (hit.collider.CompareTag("WallFinish"))
             {
                 Debug.Log("WALLFinish");
                 this.isMove = false;
                 this.isCheckMoving = true;
                 rb.velocity = Vector3.zero;
+
+                // show victory
+                UIManager.Instance.ShowUIVictory();
+                GameManager.Instance.ChangeGameState(GameState.Victory);
             }
         }
-        Debug.DrawRay(transform.position + new Vector3(0, 1f, 0), directionRaycast, Color.red);
     }
     //-----------------------------------
 
@@ -235,7 +238,7 @@ public class PlayerCtl : MonoBehaviour
     private void ClearBrick()
     {
         if (stackBrick.Count == 0) return;
-        for(int i = 0; i < stackBrick.Count; i++)
+        for (int i = 0; i < stackBrick.Count; i++)
         {
             Destroy(stackBrick.Pop());
             Body.transform.position -= new Vector3(0, .15f, 0);
