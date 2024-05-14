@@ -6,7 +6,7 @@ public enum Direction { Right, Left, Down, Up, None }
 public class PlayerCtl : MonoBehaviour
 {
     [SerializeField]
-    private float speed = 5;
+    private float speed;
     [SerializeField]
     private GameObject PrefabBrick;
 
@@ -14,7 +14,6 @@ public class PlayerCtl : MonoBehaviour
     private Vector3 mousePosUp;
     private Vector3 directionVector;
     private Vector3 directionRaycast;
-
 
     private Stack<GameObject> stackBrick = new Stack<GameObject>();
     private List<GameObject> quettedUnbricks = new List<GameObject>(); // Danh sách các khối UnBrick đã được quét
@@ -27,30 +26,32 @@ public class PlayerCtl : MonoBehaviour
 
     private bool isMove;
     private bool isCheckMoving;
+    private bool isWallFinish;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        isMove = false;
-        isCheckMoving = true;
     }
     private void Start()
     {
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         curPosBrick = Vector3.zero;
+        OnInit();
     }
     public void OnInit()
     {
         ClearBrick();
+        this.speed = 10f;
         this.isMove = false;
         this.isCheckMoving = true;
         rb.velocity = Vector3.zero;
+        isWallFinish = false;
     }
 
     private void FixedUpdate()
     {
         //check đường vuốt màn hình
-        if (isCheckMoving)
+        if (isCheckMoving && GameManager.Instance.currentGameState == GameState.Playing)
         {
             CheckMoving();
         }
@@ -60,9 +61,6 @@ public class PlayerCtl : MonoBehaviour
         if (isMove)
         {
             Move();
-        }
-        if (isMove)
-        {
             CheckBrick();
         }
 
@@ -77,6 +75,9 @@ public class PlayerCtl : MonoBehaviour
             {
                 hit.collider.gameObject.SetActive(false);
                 AddBrick();
+
+                //Update Score
+                GameManager.Instance.UpdateScore(1);
             }
             else if (hit.collider.CompareTag("UnBrick"))
             {
@@ -98,7 +99,8 @@ public class PlayerCtl : MonoBehaviour
             else if (hit.collider.CompareTag("Finish"))
             {
                 Debug.Log("Finish");
-                this.speed = 20f;
+                this.speed = 15f;
+                LevelManager.Instance.curLevel.PlayParticleSystem();
             }
 
 
@@ -201,17 +203,32 @@ public class PlayerCtl : MonoBehaviour
             }
             else if (hit.collider.CompareTag("WallFinish"))
             {
-                Debug.Log("WALLFinish");
-                this.isMove = false;
-                this.isCheckMoving = true;
-                rb.velocity = Vector3.zero;
-
-                // show victory
-                UIManager.Instance.ShowUIVictory();
-                GameManager.Instance.ChangeGameState(GameState.Victory);
+                if(isWallFinish == false) {
+                    isWallFinish = true;
+                    LevelManager.Instance.curLevel.AcitveChest();
+                    this.isMove = false;
+                    this.isCheckMoving = true;
+                    rb.velocity = Vector3.zero;
+                    // show victory
+                    StartCoroutine(VictoryCoroutine(2f));
+                }
+                
             }
         }
     }
+
+    IEnumerator VictoryCoroutine(float delayTime)
+    {
+        yield return new WaitForSeconds(delayTime);
+
+        GameManager.Instance.UpdateBestScore();
+        GameManager.Instance.ResetScore();
+        UIManager.Instance.ShowUIVictory();
+        GameManager.Instance.ChangeGameState(GameState.Victory);
+        
+
+    }
+
     //-----------------------------------
 
     //Brick

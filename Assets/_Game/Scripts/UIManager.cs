@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -51,8 +52,15 @@ public class UIManager : MonoBehaviour
         ActiveUI(3);
     }
 
-    public void ShowUILoading()
+    public void ShowUILoading(Action onComplete)
     {
         ActiveUI(4);
+        StartCoroutine(LoadingCoroutine(onComplete));
+    }
+
+    IEnumerator LoadingCoroutine(Action onComplete)
+    {
+        yield return new WaitForSeconds(2f);
+        onComplete?.Invoke();
     }
 }

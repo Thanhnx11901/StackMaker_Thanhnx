@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using static GameManager;
 public enum GameState
 {
@@ -12,7 +14,17 @@ public enum GameState
 public class GameManager : MonoBehaviour
 {
 
-    private GameState currentStatus;
+    public GameState currentGameState;
+
+    public int curScore;
+    public int totalScore;
+    public int bestScore;
+
+    public Text textCurScore;
+    public Text textTotalScore;
+    public Text textBestScore;
+    public Text curLevel;
+
 
     public static GameManager Instance { get; private set; }
 
@@ -32,15 +44,19 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        ChangeGameState(GameState.MainMenu);
-        UIManager.Instance.ShowUIMainMenu();
+        UIManager.Instance.ShowUILoading(() =>
+        {
+            ChangeGameState(GameState.MainMenu);
+            UIManager.Instance.ShowUIMainMenu();
+        });
+        
     }
 
     public void ChangeGameState(GameState newStatus)
     {
-        currentStatus = newStatus;
+        currentGameState = newStatus;
 
-        switch (currentStatus)
+        switch (currentGameState)
         {
             case GameState.MainMenu:
                 break;
@@ -55,9 +71,13 @@ public class GameManager : MonoBehaviour
 
     public void BtnPlay()
     {
-        ChangeGameState(GameState.Playing);
-        UIManager.Instance.ShowUIPlaying();
-        LevelManager.Instance.LoadLevel(PlayerPrefs.GetInt("Level"));
+        UIManager.Instance.ShowUILoading(() =>
+        {
+            ChangeGameState(GameState.Playing);
+            UIManager.Instance.ShowUIPlaying();
+            LevelManager.Instance.LoadLevel(PlayerPrefs.GetInt("Level"));
+
+        });
     }
     public void BtnSetting()
     {
@@ -68,23 +88,55 @@ public class GameManager : MonoBehaviour
     public void BtnRetry()
     {
         Time.timeScale = 1;
-        ChangeGameState(GameState.Playing);
-        UIManager.Instance.ShowUIPlaying();
-        LevelManager.Instance.RetryLevel();
-
+        UIManager.Instance.ShowUILoading(() =>
+        {
+            ChangeGameState(GameState.Playing);
+            UIManager.Instance.ShowUIPlaying();
+            LevelManager.Instance.RetryLevel();
+            ResetScore();
+        });
     }
     public void BtnContinue()
     {
         Time.timeScale = 1;
-        ChangeGameState(GameState.Playing);
-        UIManager.Instance.ShowUIPlaying();
+        StartCoroutine(MyCoroutine(() =>
+        {
+            ChangeGameState(GameState.Playing);
+            UIManager.Instance.ShowUIPlaying();
+        },0.00001f));
     }
     public void BtnNextLevel()
     {
         Time.timeScale = 1;
-        ChangeGameState(GameState.Playing);
-        UIManager.Instance.ShowUIPlaying();
-        LevelManager.Instance.NextLevel();
+        UIManager.Instance.ShowUILoading(() =>
+        {
+            ChangeGameState(GameState.Playing);
+            UIManager.Instance.ShowUIPlaying();
+            LevelManager.Instance.NextLevel();
+        });
+    }
 
+    IEnumerator MyCoroutine(Action onComplete, float delayTime)
+    {
+        yield return new WaitForSeconds(delayTime);
+        onComplete?.Invoke();
+    }
+
+    public void UpdateScore(int indexScore)
+    {
+        curScore += indexScore;
+        textCurScore.text = curScore.ToString();
+    }
+    public void ResetScore()
+    {
+        curScore = 0;
+        textCurScore.text = curScore.ToString();
+    }
+    public void UpdateBestScore()
+    {
+        curLevel.text = "Level " + (PlayerPrefs.GetInt("Level")+1);
+        PlayerPrefs.SetInt("BestScore", PlayerPrefs.GetInt("BestScore") + curScore);
+        textBestScore.text = "BEST SCORE: " + PlayerPrefs.GetInt("BestScore").ToString();
+        textTotalScore.text = "SCORE: " + curScore;
     }
 }

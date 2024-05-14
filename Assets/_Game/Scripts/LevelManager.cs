@@ -24,10 +24,6 @@ public class LevelManager : MonoBehaviour
             Instance = this;
         }
     }
-
-    private void Start()
-    {
-    }
     public void LoadLevel(int indexLevel)
     {
         if(curLevel != null) Destroy(curLevel.gameObject);
@@ -50,6 +46,7 @@ public class LevelManager : MonoBehaviour
         PlayerCtl.transform.position = curLevel.StartPoint.position + new Vector3(0, 2.7f, 0);
         PlayerCtl.OnInit();
         PlayerPrefs.SetInt("Level", (PlayerPrefs.GetInt("Level")+1));
+        PlayerCtl.OnInit();
     }
 
 }
