@@ -9,6 +9,8 @@ public class LevelManager : MonoBehaviour
     public Level curLevel;
     public List<Level> PrefabLevels;
 
+    private float BodyPlayerPosY = 2.7f;
+
     public static LevelManager Instance { get; private set; }
 
     private void Awake()
@@ -26,27 +28,40 @@ public class LevelManager : MonoBehaviour
     }
     public void LoadLevel(int indexLevel)
     {
-        if(curLevel != null) Destroy(curLevel.gameObject);
+        if (curLevel != null) Destroy(curLevel.gameObject);
         curLevel = Instantiate(PrefabLevels[indexLevel], transform);
-        PlayerCtl.transform.position = curLevel.StartPoint.position + new Vector3(0, 2.7f, 0);
+        PlayerCtl.transform.position = curLevel.StartPoint.position + Vector3.up * BodyPlayerPosY;
         PlayerCtl.OnInit();
     }
     public void RetryLevel()
     {
-        Debug.Log("retry");
         if (curLevel != null) Destroy(curLevel.gameObject);
         curLevel = Instantiate(PrefabLevels[PlayerPrefs.GetInt("Level")], transform);
-        PlayerCtl.transform.position = curLevel.StartPoint.position + new Vector3(0, 2.7f, 0);
+        PlayerCtl.transform.position = curLevel.StartPoint.position + Vector3.up * BodyPlayerPosY;
         PlayerCtl.OnInit();
     }
     public void NextLevel()
     {
         if (curLevel != null) Destroy(curLevel.gameObject);
-        curLevel = Instantiate(PrefabLevels[PlayerPrefs.GetInt("Level")+1], transform);
-        PlayerCtl.transform.position = curLevel.StartPoint.position + new Vector3(0, 2.7f, 0);
-        PlayerCtl.OnInit();
-        PlayerPrefs.SetInt("Level", (PlayerPrefs.GetInt("Level")+1));
-        PlayerCtl.OnInit();
+
+        if ((PrefabLevels.Count - 1) >= (PlayerPrefs.GetInt("Level") + 1))
+        {
+            curLevel = Instantiate(PrefabLevels[PlayerPrefs.GetInt("Level") + 1], transform);
+            PlayerCtl.transform.position = curLevel.StartPoint.position + Vector3.up * BodyPlayerPosY;
+            PlayerCtl.OnInit();
+            PlayerPrefs.SetInt("Level", (PlayerPrefs.GetInt("Level") + 1));
+        }
+        else
+        {
+            UIManager.Instance.ShowUILoading(() =>
+            {
+                GameManager.Instance.ChangeGameState(GameState.MainMenu);
+                UIManager.Instance.ShowUIMainMenu();
+                PlayerPrefs.SetInt("Level", 0);
+            });
+
+        }
+
     }
 
 }

@@ -12,16 +12,19 @@ public class PlayerCtl : MonoBehaviour
 
     private Vector3 mousePosDown;
     private Vector3 mousePosUp;
+
     private Vector3 directionVector;
     private Vector3 directionRaycast;
 
     private Stack<GameObject> stackBrick = new Stack<GameObject>();
-    private List<GameObject> quettedUnbricks = new List<GameObject>(); // Danh sách các khối UnBrick đã được quét
+    private List<GameObject> quettedUnbricks = new List<GameObject>();
 
 
     private Vector3 curPosBrick;
+
     [SerializeField]
     private Transform Body;
+
     private Rigidbody rb;
 
     private bool isMove;
@@ -41,11 +44,14 @@ public class PlayerCtl : MonoBehaviour
     public void OnInit()
     {
         ClearBrick();
-        this.speed = 10f;
+
+        this.speed = Constant.SPEED;
+
+        isWallFinish = false;
         this.isMove = false;
         this.isCheckMoving = true;
+
         rb.velocity = Vector3.zero;
-        isWallFinish = false;
     }
 
     private void FixedUpdate()
@@ -68,12 +74,13 @@ public class PlayerCtl : MonoBehaviour
     private void CheckBrick()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + new Vector3(0, 1f, 0), Vector3.down, out hit, 1f))
+        if (Physics.Raycast(transform.position + Vector3.up, Vector3.down, out hit, Constant.DISTANCE_RAYCAST_BRICK))
         {
             // Kiểm tra xem đối tượng được hit có tag là "brick" hay không
             if (hit.collider.CompareTag("Brick"))
             {
                 hit.collider.gameObject.SetActive(false);
+
                 AddBrick();
 
                 //Update Score
@@ -98,8 +105,7 @@ public class PlayerCtl : MonoBehaviour
             }
             else if (hit.collider.CompareTag("Finish"))
             {
-                Debug.Log("Finish");
-                this.speed = 15f;
+                this.speed = Constant.SPEED_FINISH;
                 LevelManager.Instance.curLevel.PlayParticleSystem();
             }
 
@@ -138,16 +144,16 @@ public class PlayerCtl : MonoBehaviour
         switch (direction)
         {
             case Direction.Up:
-                SetMovementParameters(0, 180, new Vector3(0, 0, 1f));
+                SetMovementParameters(0, 180, Vector3.forward);
                 break;
             case Direction.Right:
-                SetMovementParameters(0, -90, new Vector3(1f, 0, 0));
+                SetMovementParameters(0, -90, Vector3.right);
                 break;
             case Direction.Left:
-                SetMovementParameters(0, 90, new Vector3(-1f, 0, 0));
+                SetMovementParameters(0, 90, Vector3.left);
                 break;
             case Direction.Down:
-                SetMovementParameters(0, 0, new Vector3(0, 0, -1f));
+                SetMovementParameters(0, 0, Vector3.back);
                 break;
             case Direction.None:
                 // Handle case where direction is not determined
@@ -191,28 +197,32 @@ public class PlayerCtl : MonoBehaviour
     private void CheckWall(Vector3 directionRaycast)
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + new Vector3(0, 1f, 0), directionRaycast, out hit, .52f))
+        if (Physics.Raycast(transform.position + Vector3.up, directionRaycast, out hit, Constant.DISTANCE_RAYCAST_WALL))
         {
             // Kiểm tra xem đối tượng được hit có tag là "brick" hay không
             if (hit.collider.CompareTag("Wall"))
             {
-                Debug.Log("WALL");
                 this.isMove = false;
                 this.isCheckMoving = true;
+
                 rb.velocity = Vector3.zero;
             }
             else if (hit.collider.CompareTag("WallFinish"))
             {
-                if(isWallFinish == false) {
+                if (isWallFinish == false)
+                {
                     isWallFinish = true;
-                    LevelManager.Instance.curLevel.AcitveChest();
                     this.isMove = false;
                     this.isCheckMoving = true;
+
+                    LevelManager.Instance.curLevel.AcitveChest();
+
                     rb.velocity = Vector3.zero;
+
                     // show victory
-                    StartCoroutine(VictoryCoroutine(2f));
+                    StartCoroutine(VictoryCoroutine(Constant.DELAY_TIME_VICTORY));
                 }
-                
+
             }
         }
     }
@@ -225,8 +235,6 @@ public class PlayerCtl : MonoBehaviour
         GameManager.Instance.ResetScore();
         UIManager.Instance.ShowUIVictory();
         GameManager.Instance.ChangeGameState(GameState.Victory);
-        
-
     }
 
     //-----------------------------------
@@ -236,30 +244,34 @@ public class PlayerCtl : MonoBehaviour
     //thêm 1 khối Brick dưới chân
     private void AddBrick()
     {
-        GameObject SpawnBrick = Instantiate(PrefabBrick, transform); // prefab sẽ là con của transform hiện tại
-        SpawnBrick.transform.localPosition = curPosBrick; // set vị trí local của prefab là (0, 0, 0)
+        GameObject SpawnBrick = Instantiate(PrefabBrick, transform); 
+        SpawnBrick.transform.localPosition = curPosBrick; 
         SpawnBrick.transform.localRotation = Quaternion.Euler(-90f, 0f, 90f);
-        curPosBrick.y += .15f;
-        Body.transform.position += new Vector3(0, .15f, 0);
+        curPosBrick.y += Constant.DISTANCE_BRICK_POS_Y;
+        Body.transform.position += Vector3.up * Constant.DISTANCE_BRICK_POS_Y;
         stackBrick.Push(SpawnBrick);
     }
     //xóa 1 khối Brick dưới chân
     private void RemoveBrick()
     {
         if (stackBrick.Count == 0) return;
+
         Destroy(stackBrick.Pop());
-        Body.transform.position -= new Vector3(0, .15f, 0);
-        curPosBrick.y -= .15f;
+
+        Body.transform.position -= Vector3.up * Constant.DISTANCE_BRICK_POS_Y;
+        curPosBrick.y -= Constant.DISTANCE_BRICK_POS_Y;
     }
     //xóa tất cả khối Brick dưới chân
     private void ClearBrick()
     {
         if (stackBrick.Count == 0) return;
-        for (int i = 0; i < stackBrick.Count; i++)
+
+        while (stackBrick.Count > 0)
         {
             Destroy(stackBrick.Pop());
-            Body.transform.position -= new Vector3(0, .15f, 0);
-            curPosBrick.y -= .15f;
+
+            Body.transform.position -= Vector3.up * Constant.DISTANCE_BRICK_POS_Y;
+            curPosBrick.y -= Constant.DISTANCE_BRICK_POS_Y;
         }
     }
     //-----------------------------------

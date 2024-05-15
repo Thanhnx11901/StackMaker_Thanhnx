@@ -29,7 +29,7 @@ public class UIManager : MonoBehaviour
     }
     private void ActiveUI(int index)
     {
-        for(int i= 0; i<ListUI.Count; i++)
+        for (int i = 0; i < ListUI.Count; i++)
         {
             ListUI[i].SetActive(false);
         }
@@ -60,7 +60,7 @@ public class UIManager : MonoBehaviour
 
     IEnumerator LoadingCoroutine(Action onComplete)
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(Constant.DELAY_TIME_LOADING);
         onComplete?.Invoke();
     }
 }

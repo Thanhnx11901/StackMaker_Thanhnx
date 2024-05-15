@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
             ChangeGameState(GameState.MainMenu);
             UIManager.Instance.ShowUIMainMenu();
         });
-        
+
     }
 
     public void ChangeGameState(GameState newStatus)
@@ -76,14 +76,14 @@ public class GameManager : MonoBehaviour
             ChangeGameState(GameState.Playing);
             UIManager.Instance.ShowUIPlaying();
             LevelManager.Instance.LoadLevel(PlayerPrefs.GetInt("Level"));
-
+            LevelManager.Instance.PlayerCtl.OnInit();
         });
     }
     public void BtnSetting()
     {
         ChangeGameState(GameState.Paused);
         UIManager.Instance.ShowUIPaused();
-        Time.timeScale = 0; 
+        Time.timeScale = 0;
     }
     public void BtnRetry()
     {
@@ -94,6 +94,7 @@ public class GameManager : MonoBehaviour
             UIManager.Instance.ShowUIPlaying();
             LevelManager.Instance.RetryLevel();
             ResetScore();
+            LevelManager.Instance.PlayerCtl.OnInit();
         });
     }
     public void BtnContinue()
@@ -103,7 +104,7 @@ public class GameManager : MonoBehaviour
         {
             ChangeGameState(GameState.Playing);
             UIManager.Instance.ShowUIPlaying();
-        },0.00001f));
+        }, 0.00001f));
     }
     public void BtnNextLevel()
     {
@@ -113,6 +114,7 @@ public class GameManager : MonoBehaviour
             ChangeGameState(GameState.Playing);
             UIManager.Instance.ShowUIPlaying();
             LevelManager.Instance.NextLevel();
+            LevelManager.Instance.PlayerCtl.OnInit();
         });
     }
 
@@ -134,7 +136,7 @@ public class GameManager : MonoBehaviour
     }
     public void UpdateBestScore()
     {
-        curLevel.text = "Level " + (PlayerPrefs.GetInt("Level")+1);
+        curLevel.text = "Level " + (PlayerPrefs.GetInt("Level") + 1);
         PlayerPrefs.SetInt("BestScore", PlayerPrefs.GetInt("BestScore") + curScore);
         textBestScore.text = "BEST SCORE: " + PlayerPrefs.GetInt("BestScore").ToString();
         textTotalScore.text = "SCORE: " + curScore;
