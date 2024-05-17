@@ -90,6 +90,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
         UIManager.Instance.ShowUILoading(() =>
         {
+            LevelManager.Instance.PlayerCtl.animator.SetInteger("renwu", 0);
             ChangeGameState(GameState.Playing);
             UIManager.Instance.ShowUIPlaying();
             LevelManager.Instance.RetryLevel();

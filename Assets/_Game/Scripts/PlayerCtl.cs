@@ -6,6 +6,9 @@ public enum Direction { Right, Left, Down, Up, None }
 public class PlayerCtl : MonoBehaviour
 {
     [SerializeField]
+    public Animator animator;
+
+    [SerializeField]
     private float speed;
     [SerializeField]
     private GameObject PrefabBrick;
@@ -15,6 +18,8 @@ public class PlayerCtl : MonoBehaviour
 
     private Vector3 directionVector;
     private Vector3 directionRaycast;
+
+    private bool isAddFirstDistance;
 
     private Stack<GameObject> stackBrick = new Stack<GameObject>();
     private List<GameObject> quettedUnbricks = new List<GameObject>();
@@ -37,6 +42,7 @@ public class PlayerCtl : MonoBehaviour
     }
     private void Start()
     {
+        isAddFirstDistance = false;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         curPosBrick = Vector3.zero;
         OnInit();
@@ -46,7 +52,9 @@ public class PlayerCtl : MonoBehaviour
         ClearBrick();
 
         this.speed = Constant.SPEED;
+        this.Body.localPosition = Vector3.zero;
 
+        isAddFirstDistance = false;
         isWallFinish = false;
         this.isMove = false;
         this.isCheckMoving = true;
@@ -219,6 +227,8 @@ public class PlayerCtl : MonoBehaviour
 
                     rb.velocity = Vector3.zero;
 
+                    animator.SetInteger("renwu",2);
+
                     // show victory
                     StartCoroutine(VictoryCoroutine(Constant.DELAY_TIME_VICTORY));
                 }
@@ -235,6 +245,7 @@ public class PlayerCtl : MonoBehaviour
         GameManager.Instance.ResetScore();
         UIManager.Instance.ShowUIVictory();
         GameManager.Instance.ChangeGameState(GameState.Victory);
+        animator.SetInteger("renwu", 0);
     }
 
     //-----------------------------------
@@ -244,11 +255,18 @@ public class PlayerCtl : MonoBehaviour
     //thêm 1 khối Brick dưới chân
     private void AddBrick()
     {
+        if(isAddFirstDistance == true)
+        {
+            Body.transform.position += Vector3.up * (Constant.DISTANCE_BRICK_POS_Y);
+        }
+        isAddFirstDistance = true;
         GameObject SpawnBrick = Instantiate(PrefabBrick, transform); 
         SpawnBrick.transform.localPosition = curPosBrick; 
         SpawnBrick.transform.localRotation = Quaternion.Euler(-90f, 0f, 90f);
+
+       
         curPosBrick.y += Constant.DISTANCE_BRICK_POS_Y;
-        Body.transform.position += Vector3.up * Constant.DISTANCE_BRICK_POS_Y;
+
         stackBrick.Push(SpawnBrick);
     }
     //xóa 1 khối Brick dưới chân
@@ -258,7 +276,7 @@ public class PlayerCtl : MonoBehaviour
 
         Destroy(stackBrick.Pop());
 
-        Body.transform.position -= Vector3.up * Constant.DISTANCE_BRICK_POS_Y;
+        Body.transform.position -= Vector3.up * (Constant.DISTANCE_BRICK_POS_Y);
         curPosBrick.y -= Constant.DISTANCE_BRICK_POS_Y;
     }
     //xóa tất cả khối Brick dưới chân
@@ -270,7 +288,7 @@ public class PlayerCtl : MonoBehaviour
         {
             Destroy(stackBrick.Pop());
 
-            Body.transform.position -= Vector3.up * Constant.DISTANCE_BRICK_POS_Y;
+            Body.transform.position -= Vector3.up * (Constant.DISTANCE_BRICK_POS_Y);
             curPosBrick.y -= Constant.DISTANCE_BRICK_POS_Y;
         }
     }
